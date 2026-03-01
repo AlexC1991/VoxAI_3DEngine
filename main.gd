@@ -1,7 +1,12 @@
 extends Node3D
 
+var ball: MeshInstance3D
+var velocity: float = 0.0
+var gravity: float = -20.0
+var bounce: float = 0.85
+
 func _ready():
-	print("VoxAI Demo: Starting internal orchestration...")
+	print("VoxAI Demo: Starting internal orchestration with physics...")
 	
 	# Lite Environment
 	var env_node = WorldEnvironment.new()
@@ -37,15 +42,34 @@ func _ready():
 	mat.emission_energy_multiplier = 0.5
 	floor_node.mesh.material = mat
 	
-	# Central Ball (Static Placeholder)
-	var ball = MeshInstance3D.new()
+	# Animated Ball
+	ball = MeshInstance3D.new()
 	add_child(ball)
+	ball.name = "Ball"
 	ball.mesh = SphereMesh.new()
-	ball.mesh.radius = 2.0
-	ball.mesh.height = 4.0
+	ball.mesh.radius = 1.0
+	ball.mesh.height = 2.0
 	var bmat = StandardMaterial3D.new()
 	bmat.albedo_color = Color(1, 0, 0)
 	ball.mesh.material = bmat
-	ball.position = Vector3(0, 2, 0)
+	ball.position = Vector3(0, 15, 0)
 	
-	print("VoxAI Demo: Scenes ready.")
+	print("VoxAI Demo: Initialization complete. Ball should be bouncing.")
+
+func _process(delta):
+	# Simple internal physics loop for the demo ball
+	if ball:
+		velocity += gravity * delta
+		ball.position.y += velocity * delta
+		
+		# Floor bounce at Y=1.0 (radius=1)
+		if ball.position.y < 1.0:
+			ball.position.y = 1.0
+			velocity = -velocity * bounce
+			# Stop micro-bounces
+			if abs(velocity) < 1.0:
+				velocity = 0
+				# Reset for infinite demo if it stops
+				if ball.position.y == 1.0:
+					ball.position.y = 15.0
+					velocity = 0
